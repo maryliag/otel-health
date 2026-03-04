@@ -1,0 +1,11 @@
+apiVersion: 1
+
+datasources:
+  - name: OTel Health (Infinity)
+    type: yesoreyeram-infinity-datasource
+    access: proxy
+    uid: otel-infinity
+    isDefault: true
+    jsonData:
+      refId: A
+    editable: true
