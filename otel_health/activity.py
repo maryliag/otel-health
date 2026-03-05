@@ -23,7 +23,7 @@ from otel_health.teams import Cache, GitHubClient
 
 GITHUB_API = "https://api.github.com"
 DEFAULT_ORG = "open-telemetry"
-DEFAULT_WEEKS = 26  # ~6 months
+DEFAULT_WEEKS = 52  # 1 year
 DEFAULT_TOP_REPOS = 100  # repos ranked by total team member count
 
 logging.basicConfig(

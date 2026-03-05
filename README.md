@@ -14,7 +14,7 @@ The pipeline runs in three steps:
 2. **`otel_health.collector`** — reads `output/teams.json`, aggregates counts per repo and org-wide (deduplicated), and writes the Grafana data files.
    Role deduplication is applied: a maintainer is not also counted as an approver or triager; an approver is not also counted as a triager.
 
-3. **`otel_health.activity`** — fetches weekly unique contributor counts per repository for the past 26 weeks (~6 months) and writes **`output/activity.json`**.
+3. **`otel_health.activity`** — fetches weekly unique contributor counts per repository for the past 52 weeks (1 Year) and writes **`output/activity.json`**.
    Activity includes: commits authored, issues/PRs opened, and issue/PR comments.
    Only the top repositories by team member count are included (default: 20, configurable with `--top-repos`).
 
@@ -58,7 +58,7 @@ docker compose down
 | Avg Approvers / Repo | Average number of approvers per repository |
 | Avg Maintainers / Repo | Average number of maintainers per repository |
 | Repository Details | Table of all repos sorted alphabetically, with role counts, member usernames, and clickable GitHub links |
-| Weekly Unique Contributors by Repository | Line chart of weekly unique contributors per repo over the past 6 months |
+| Weekly Unique Contributors by Repository | Line chart of weekly unique contributors per repo over the past year |
 
 ## Output files
 

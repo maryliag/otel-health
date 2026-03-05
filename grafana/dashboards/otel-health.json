@@ -872,7 +872,7 @@
         "type": "yesoreyeram-infinity-datasource",
         "uid": "otel-infinity"
       },
-      "description": "Weekly unique contributors per repository over the past 6 months. A contributor is anyone who authored a commit, opened an issue or PR, or left a comment.",
+      "description": "Weekly unique contributors per repository over the past 6 year. A contributor is anyone who authored a commit, opened an issue or PR, or left a comment.",
       "fieldConfig": {
         "defaults": {
           "custom": {
