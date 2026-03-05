@@ -64,7 +64,7 @@ def fetch_repo_activity(
         if not login or not date_str:
             return
         login_lower = login.lower()
-        if "[bot]" in login_lower or "opentelemetrybot" in login_lower:
+        if "[bot]" in login_lower or "opentelemetrybot" in login_lower or "copilot" in login_lower:
             return
         dt = datetime.fromisoformat(date_str.replace("Z", "+00:00"))
         weekly[week_start(dt)].add(login_lower)

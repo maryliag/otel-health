@@ -184,7 +184,7 @@ def main():
         print()
     else:
         if not run_step(
-            "Fetching contributor activity (past 26 weeks)", "otel_health.activity", activity_args
+            "Fetching contributor activity (past 52 weeks)", "otel_health.activity", activity_args
         ):
             print_colored(
                 "Warning: activity data collection failed. Dashboard will load without it.",

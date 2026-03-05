@@ -69,7 +69,7 @@ docker compose down
 | `output/by_repo_details.json` | Per-repo counts and member usernames (for Grafana table panel) |
 | `output/by_repo.csv` | Per-repo counts (for external use) |
 | `output/otel-health.json` | Full dataset including member lists and team names per role |
-| `output/activity.json` | Weekly unique contributor counts per repo for the past 26 weeks |
+| `output/activity.json` | Weekly unique contributor counts per repo for the past year |
 | `output/contributors_by_week.json` | Weekly contributor usernames per repo (only weeks with activity) |
 
 ## Options
@@ -88,7 +88,7 @@ Activity options (passed through to step 3):
 
 | Flag | Default | Description |
 |---|---|---|
-| `--weeks N` | 26 | Number of past weeks to collect |
+| `--weeks N` | 52 | Number of past weeks to collect |
 | `--top-repos N` | 20 | Repos to include, ranked by team member count (0 = all) |
 
 You can also run each step independently:
@@ -101,7 +101,7 @@ uv run python -m otel_health.teams
 uv run python -m otel_health.collector --teams-file output/teams.json
 
 # Step 3 only — fetch contributor activity (reads teams.json, calls GitHub API)
-uv run python -m otel_health.activity --weeks 26 --top-repos 20
+uv run python -m otel_health.activity --weeks 52 --top-repos 100
 ```
 
 The cache directory stores GitHub API responses to speed up re-runs and avoid hitting rate limits.
