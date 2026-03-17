@@ -81,6 +81,8 @@ def compute_stats(teams_data: dict) -> dict:
     repo_members: dict[str, dict[str, set[str]]] = {}
     # Per-repo team names: repo -> role -> set of team names
     repo_teams: dict[str, dict[str, set[str]]] = {}
+    # Per-user team membership (org-wide): username -> role -> set of team names
+    user_teams: dict[str, dict[str, set[str]]] = {}
 
     for team in role_teams:
         role = team["role"]
@@ -91,6 +93,10 @@ def compute_stats(teams_data: dict) -> dict:
             username = raw_m["username"] if isinstance(raw_m, dict) else raw_m
 
             all_by_role[role].add(username)
+
+            if username not in user_teams:
+                user_teams[username] = {r: set() for r in ROLES}
+            user_teams[username][role].add(team_name)
 
             for repo in repos:
                 if repo in EXCLUDED_REPOS:
@@ -148,6 +154,42 @@ def compute_stats(teams_data: dict) -> dict:
     # Sort descending by total so charts show the most active repos first
     by_repo.sort(key=lambda r: r["total"], reverse=True)
 
+    # Build per-user group membership list
+    by_user: list[dict] = []
+    for username, role_data in user_teams.items():
+        maintainer_groups = sorted(role_data["maintainers"])
+        # Components already covered by a maintainer team (strip "-maintainers" suffix)
+        maintainer_components = {g[: -len("-maintainers")] for g in maintainer_groups if g.endswith("-maintainers")}
+        # Exclude approver teams whose component is already covered by a maintainer team
+        approver_groups = sorted(
+            g for g in role_data["approvers"]
+            if not (g.endswith("-approvers") and g[: -len("-approvers")] in maintainer_components)
+        )
+        # Components covered by maintainer or (remaining) approver teams
+        approver_components = {g[: -len("-approvers")] for g in approver_groups if g.endswith("-approvers")}
+        covered_components = maintainer_components | approver_components
+        # Exclude triager teams whose component is already covered
+        triager_groups = sorted(
+            g for g in role_data["triagers"]
+            if not (g.endswith("-triagers") and g[: -len("-triagers")] in covered_components)
+        )
+        total = len(triager_groups) + len(approver_groups) + len(maintainer_groups)
+        by_user.append(
+            {
+                "username": username,
+                "triager_group_count": len(triager_groups),
+                "triager_group_names": ", ".join(triager_groups),
+                "approver_group_count": len(approver_groups),
+                "approver_group_names": ", ".join(approver_groups),
+                "maintainer_group_count": len(maintainer_groups),
+                "maintainer_group_names": ", ".join(maintainer_groups),
+                "total_groups": total,
+            }
+        )
+    by_user.sort(key=lambda u: (-u["total_groups"], u["username"]))
+
+    avg_groups_per_user = round(sum(u["total_groups"] for u in by_user) / len(by_user), 1) if by_user else 0
+
     return {
         "generated_at": teams_data["generated_at"],
         "org": teams_data["org"],
@@ -163,8 +205,11 @@ def compute_stats(teams_data: dict) -> dict:
             "avg_triagers_per_repo": round(sum(r["triagers"] for r in by_repo) / len(by_repo), 1) if by_repo else 0,
             "avg_approvers_per_repo": round(sum(r["approvers"] for r in by_repo) / len(by_repo), 1) if by_repo else 0,
             "avg_maintainers_per_repo": round(sum(r["maintainers"] for r in by_repo) / len(by_repo), 1) if by_repo else 0,
+            "avg_groups_per_user": avg_groups_per_user,
+            "total_unique_users": len(by_user),
         },
         "by_repo": by_repo,
+        "by_user": by_user,
     }
 
 
@@ -227,6 +272,11 @@ def write_outputs(data: dict, output_dir: Path) -> None:
                 }
             )
     logger.info(f"Written: {csv_path}")
+
+    # Per-user group membership JSON — used by Grafana table panel
+    user_path = output_dir / "by_user_groups.json"
+    user_path.write_text(json.dumps(data["by_user"], indent=2))
+    logger.info(f"Written: {user_path}")
 
 
 def main() -> None:

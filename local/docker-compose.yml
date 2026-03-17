@@ -3,7 +3,7 @@ version: '3.8'
 services:
   file-server:
     image: python:3.11-slim
-    container_name: otel-health-fileserver
+    container_name: otel-health-server
     working_dir: /data
     command: python -m http.server 8000
     volumes:

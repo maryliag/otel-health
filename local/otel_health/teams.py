@@ -113,6 +113,18 @@ class GitHubClient:
         try:
             response = self.session.get(url, params=params, timeout=30)
             self.rate_limiter.check(dict(response.headers))
+            if response.status_code == 429 or (
+                response.status_code == 403
+                and int(response.headers.get("X-RateLimit-Remaining", 9999)) == 0
+            ):
+                reset_at = int(response.headers.get("X-RateLimit-Reset", 0))
+                wait = max(0, reset_at - int(time.time()))
+                logger.error(
+                    f"GitHub rate limit exceeded for {url}. "
+                    f"Resets in {wait}s (at {datetime.fromtimestamp(reset_at, tz=timezone.utc).isoformat()}). "
+                    f"Response: {response.text[:200]}"
+                )
+                return None
             if response.status_code in (403, 404):
                 self.cache.set(cache_key, None)
                 return None

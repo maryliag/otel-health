@@ -1,0 +1,36 @@
+name: OTel Health Cloud Push
+
+on:
+  schedule:
+    - cron: '0 6 * * 1'  # Every Monday at 06:00 UTC
+  workflow_dispatch: {}   # Manual trigger
+
+jobs:
+  push-metrics:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+
+      - name: Restore cache
+        uses: actions/cache@v4
+        with:
+          path: cloud/cache
+          key: otel-health-cache-${{ github.run_id }}
+          restore-keys: otel-health-cache-
+
+      - name: Install dependencies
+        run: pip install -r cloud/requirements.txt
+
+      - name: Run cloud push
+        env:
+          GITHUB_TOKEN: ${{ secrets.GH_PAT_READ_ORG }}
+          GRAFANA_CLOUD_OTLP_ENDPOINT: ${{ secrets.GRAFANA_CLOUD_OTLP_ENDPOINT }}
+          GRAFANA_CLOUD_INSTANCE_ID: ${{ secrets.GRAFANA_CLOUD_INSTANCE_ID }}
+          GRAFANA_CLOUD_API_KEY: ${{ secrets.GRAFANA_CLOUD_API_KEY }}
+          GRAFANA_CLOUD_URL: ${{ secrets.GRAFANA_CLOUD_URL }}
+        run: cd cloud && python run_cloud.py

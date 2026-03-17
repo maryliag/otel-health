@@ -23,8 +23,13 @@ from otel_health.teams import Cache, GitHubClient
 
 GITHUB_API = "https://api.github.com"
 DEFAULT_ORG = "open-telemetry"
+
+# Logins to exclude from contributor counts (bots and automation accounts).
+# Substrings are checked with 'in'; exact names are listed in IGNORED_LOGINS.
+IGNORED_LOGIN_SUBSTRINGS = ("[bot]", "opentelemetrybot", "copilot")
+IGNORED_LOGINS = frozenset(("renovate-bot", "step-security-bot"))
 DEFAULT_WEEKS = 52  # 1 year
-DEFAULT_TOP_REPOS = 100  # repos ranked by total team member count
+DEFAULT_TOP_REPOS = 500  # repos ranked by total team member count
 
 logging.basicConfig(
     level=logging.INFO,
@@ -64,7 +69,7 @@ def fetch_repo_activity(
         if not login or not date_str:
             return
         login_lower = login.lower()
-        if "[bot]" in login_lower or "opentelemetrybot" in login_lower or "copilot" in login_lower:
+        if any(s in login_lower for s in IGNORED_LOGIN_SUBSTRINGS) or login_lower in IGNORED_LOGINS:
             return
         dt = datetime.fromisoformat(date_str.replace("Z", "+00:00"))
         weekly[week_start(dt)].add(login_lower)

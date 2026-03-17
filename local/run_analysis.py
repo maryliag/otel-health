@@ -112,18 +112,25 @@ def start_dashboard():
 
 def parse_shared_args(
     argv: list[str],
-) -> tuple[list[str], list[str], list[str], bool]:
+) -> tuple[list[str], list[str], list[str], list[str], list[str], bool, bool, bool]:
     """
     Split CLI args into those relevant for each module.
     All modules share --org, --output-dir, --cache-dir.
     collector.py additionally accepts --teams-file.
-    activity.py additionally accepts --teams-file, --weeks, --top-repos.
+    activity.py and pr_cycle_time.py additionally accept --teams-file, --weeks, --top-repos.
+    repo_activity_30d.py accepts --org, --output-dir, --cache-dir.
     --skip-activity suppresses step 3.
+    --skip-pr-cycle-time suppresses step 4.
+    --skip-repo-activity suppresses step 5.
     """
     teams_args: list[str] = []
     collector_args: list[str] = []
     activity_args: list[str] = []
+    pr_cycle_time_args: list[str] = []
+    repo_activity_args: list[str] = []
     skip_activity = False
+    skip_pr_cycle_time = False
+    skip_repo_activity = False
     i = 0
     while i < len(argv):
         arg = argv[i]
@@ -132,22 +139,32 @@ def parse_shared_args(
             teams_args += [arg, val]
             collector_args += [arg, val]
             activity_args += [arg, val]
+            pr_cycle_time_args += [arg, val]
+            repo_activity_args += [arg, val]
             i += 2
         elif arg == "--teams-file":
             val = argv[i + 1] if i + 1 < len(argv) else ""
             collector_args += [arg, val]
             activity_args += [arg, val]
+            pr_cycle_time_args += [arg, val]
             i += 2
         elif arg in ("--weeks", "--top-repos"):
             val = argv[i + 1] if i + 1 < len(argv) else ""
             activity_args += [arg, val]
+            pr_cycle_time_args += [arg, val]
             i += 2
         elif arg == "--skip-activity":
             skip_activity = True
             i += 1
+        elif arg == "--skip-pr-cycle-time":
+            skip_pr_cycle_time = True
+            i += 1
+        elif arg == "--skip-repo-activity":
+            skip_repo_activity = True
+            i += 1
         else:
             i += 1
-    return teams_args, collector_args, activity_args, skip_activity
+    return teams_args, collector_args, activity_args, pr_cycle_time_args, repo_activity_args, skip_activity, skip_pr_cycle_time, skip_repo_activity
 
 
 def main():
@@ -162,7 +179,7 @@ def main():
         )
         print()
 
-    teams_args, collector_args, activity_args, skip_activity = parse_shared_args(
+    teams_args, collector_args, activity_args, pr_cycle_time_args, repo_activity_args, skip_activity, skip_pr_cycle_time, skip_repo_activity = parse_shared_args(
         sys.argv[1:]
     )
 
@@ -188,6 +205,34 @@ def main():
         ):
             print_colored(
                 "Warning: activity data collection failed. Dashboard will load without it.",
+                Colors.YELLOW,
+            )
+            print()
+
+    # Step 4: fetch weekly PR cycle time → output/pr_cycle_time.json
+    if skip_pr_cycle_time:
+        print_colored("Skipping PR cycle time collection (--skip-pr-cycle-time).", Colors.YELLOW)
+        print()
+    else:
+        if not run_step(
+            "Fetching PR cycle time (past 52 weeks)", "otel_health.pr_cycle_time", pr_cycle_time_args
+        ):
+            print_colored(
+                "Warning: PR cycle time collection failed. Dashboard will load without it.",
+                Colors.YELLOW,
+            )
+            print()
+
+    # Step 5: fetch 30-day issue/PR counts per repo → output/repo_activity_30d.json
+    if skip_repo_activity:
+        print_colored("Skipping 30-day repo activity collection (--skip-repo-activity).", Colors.YELLOW)
+        print()
+    else:
+        if not run_step(
+            "Fetching 30-day repo activity", "otel_health.repo_activity_30d", repo_activity_args
+        ):
+            print_colored(
+                "Warning: 30-day repo activity collection failed. Dashboard will load without it.",
                 Colors.YELLOW,
             )
             print()

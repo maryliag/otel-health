@@ -1,14 +1,19 @@
 github_cache
 review_cache
 output
+cache
 .idea/
 grafana-storage/
 *.json
 !grafana/**/*.json
 !package.json
 .env
+.DS_Store
 
 # uv
 .venv/
 .python-version
 uv.lock
+
+# Python bytecode
+__pycache__/
