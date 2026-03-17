@@ -231,7 +231,7 @@ def build_dashboard(ds_uid: str) -> dict:
         {"expr": f"otel_health_user_total_groups{j}"},
     ]
     user_overrides = [
-        {"matcher": {"id": "byName", "options": "username"}, "properties": [{"id": "displayName", "value": "Username"}]},
+        {"matcher": {"id": "byName", "options": "username"}, "properties": [{"id": "displayName", "value": "Username"}, {"id": "links", "value": [{"title": "Open on GitHub", "url": "https://github.com/${__value.text}", "targetBlank": True}]}]},
         {"matcher": {"id": "byName", "options": "Value #A"}, "properties": [{"id": "displayName", "value": "Triager Groups"}]},
         {"matcher": {"id": "byName", "options": "Value #B"}, "properties": [{"id": "displayName", "value": "Approver Groups"}]},
         {"matcher": {"id": "byName", "options": "Value #C"}, "properties": [{"id": "displayName", "value": "Maintainer Groups"}]},
