@@ -223,7 +223,6 @@ def build_dashboard(ds_uid: str) -> dict:
     # ---- Weekly Unique Contributors timeseries y=42 ----
     panels.append(_timeseries_panel(11, "Weekly Unique Contributors by Repository", f"otel_health_repo_weekly_contributors{j}", 42, ds_uid))
 
-    # ---- User Group Membership table y=56 ----
     user_queries = [
         {"expr": f"otel_health_user_triager_groups{j}"},
         {"expr": f"otel_health_user_approver_groups{j}"},
@@ -237,10 +236,37 @@ def build_dashboard(ds_uid: str) -> dict:
         {"matcher": {"id": "byName", "options": "Value #C"}, "properties": [{"id": "displayName", "value": "Maintainer Groups"}]},
         {"matcher": {"id": "byName", "options": "Value #D"}, "properties": [{"id": "displayName", "value": "Total Groups"}]},
     ]
-    panels.append(_table_panel(13, "User Group Membership", user_queries, 56, ds_uid, overrides=user_overrides, sort_field="Total Groups", exclude_fields=["repo"]))
+    # ---- Role Counts Over Time timeseries y=56 ----
+    panels.append({
+        "id": 17,
+        "type": "timeseries",
+        "title": "Unique Role Counts Over Time",
+        "gridPos": {"h": 14, "w": 24, "x": 0, "y": 56},
+        "options": {"legend": {"calcs": ["lastNotNull"], "displayMode": "list", "placement": "bottom"}},
+        "fieldConfig": {
+            "defaults": {
+                "custom": {"spanNulls": True, "lineWidth": 2, "fillOpacity": 10, "pointSize": 5, "showPoints": "always"},
+            },
+            "overrides": [
+                {"matcher": {"id": "byName", "options": "Triagers"}, "properties": [{"id": "color", "value": {"fixedColor": "blue", "mode": "fixed"}}]},
+                {"matcher": {"id": "byName", "options": "Approvers"}, "properties": [{"id": "color", "value": {"fixedColor": "green", "mode": "fixed"}}]},
+                {"matcher": {"id": "byName", "options": "Maintainers"}, "properties": [{"id": "color", "value": {"fixedColor": "orange", "mode": "fixed"}}]},
+                {"matcher": {"id": "byName", "options": "Total with Status"}, "properties": [{"id": "color", "value": {"fixedColor": "dark-purple", "mode": "fixed"}}]},
+            ],
+        },
+        "targets": [
+            {"datasource": {"type": "prometheus", "uid": ds_uid}, "expr": f"otel_health_triagers_deduped{j}", "legendFormat": "Triagers", "refId": "A"},
+            {"datasource": {"type": "prometheus", "uid": ds_uid}, "expr": f"otel_health_approvers_deduped{j}", "legendFormat": "Approvers", "refId": "B"},
+            {"datasource": {"type": "prometheus", "uid": ds_uid}, "expr": f"otel_health_maintainers_deduped{j}", "legendFormat": "Maintainers", "refId": "C"},
+            {"datasource": {"type": "prometheus", "uid": ds_uid}, "expr": f"otel_health_unique_users{j}", "legendFormat": "Total with Status", "refId": "D"},
+        ],
+    })
 
-    # ---- Weekly Avg PR Cycle Time timeseries y=72 ----
-    panels.append(_timeseries_panel(15, "Weekly Average PR Cycle Time by Repository", f"otel_health_repo_avg_pr_cycle_days{j}", 72, ds_uid, unit="d"))
+    # ---- User Group Membership table y=70 ----
+    panels.append(_table_panel(13, "User Group Membership", user_queries, 70, ds_uid, overrides=user_overrides, sort_field="Total Groups", exclude_fields=["repo"]))
+
+    # ---- Weekly Avg PR Cycle Time timeseries y=86 ----
+    panels.append(_timeseries_panel(15, "Weekly Average PR Cycle Time by Repository", f"otel_health_repo_avg_pr_cycle_days{j}", 86, ds_uid, unit="d"))
 
     return {
         "id": None,
