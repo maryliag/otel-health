@@ -39,8 +39,9 @@ def _stat_panel(
         "targets": [
             {
                 "datasource": {"type": "prometheus", "uid": ds_uid},
-                "expr": expr,
+                "expr": f"last_over_time({expr}[1w])",
                 "refId": "A",
+                "instant": True,
             }
         ],
     }

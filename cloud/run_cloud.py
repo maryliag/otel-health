@@ -48,6 +48,20 @@ def _require_env(name: str) -> str:
     return value
 
 
+def _resolve_prom_uid(grafana_url: str, api_key: str) -> str:
+    """Return the Prometheus datasource UID from env var or auto-discovery."""
+    uid = os.environ.get("GRAFANA_CLOUD_PROM_UID", "").strip()
+    if uid:
+        logger.info(f"Using Prometheus datasource UID from env: {uid}")
+        return uid
+    try:
+        return discover_prometheus_uid(grafana_url, api_key)
+    except Exception:
+        uid = "grafanacloud-prom"
+        logger.warning(f"Could not discover datasource UID, using default: {uid}")
+        return uid
+
+
 def export_dashboard() -> None:
     """Export the dashboard JSON without running the data pipeline.
 
@@ -55,12 +69,7 @@ def export_dashboard() -> None:
     """
     grafana_url = _require_env("GRAFANA_CLOUD_URL").rstrip("/")
     api_key = _require_env("GRAFANA_CLOUD_API_KEY")
-
-    try:
-        ds_uid = discover_prometheus_uid(grafana_url, api_key)
-    except Exception:
-        ds_uid = "grafanacloud-prom"
-        logger.warning(f"Could not discover datasource UID, using default: {ds_uid}")
+    ds_uid = _resolve_prom_uid(grafana_url, api_key)
 
     from otel_cloud.dashboard import build_dashboard
     dashboard_json = build_dashboard(ds_uid)
@@ -152,21 +161,12 @@ def main() -> None:
 
     # -- Provision dashboard --
     logger.info("Provisioning dashboard on Grafana Cloud...")
+    ds_uid = _resolve_prom_uid(grafana_url, api_key)
     try:
-        ds_uid = discover_prometheus_uid(grafana_url, api_key)
         url = provision_dashboard(grafana_url, api_key, ds_uid)
         print(f"\n  Dashboard: {url}\n")
     except Exception:
         logger.exception("Dashboard provisioning via API failed.")
-        # Fall back: write the JSON so the user can import it manually.
-        # Try to discover the datasource UID; fall back to a common default.
-        try:
-            ds_uid = discover_prometheus_uid(grafana_url, api_key)
-        except Exception:
-            ds_uid = "grafanacloud-prom"
-            logger.warning(
-                f"Could not discover Prometheus datasource UID, using default: {ds_uid}"
-            )
         from otel_cloud.dashboard import build_dashboard
         dashboard_json = build_dashboard(ds_uid)
         export_path = cloud_dir / "output" / "otel-health-cloud-dashboard.json"
