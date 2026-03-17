@@ -27,14 +27,15 @@ def _stat_panel(
     grid_y: int,
     grid_w: int,
     ds_uid: str,
+    color: str = "green",
 ) -> dict:
     return {
         "id": panel_id,
         "type": "stat",
         "title": title,
         "gridPos": {"h": 5, "w": grid_w, "x": grid_x, "y": grid_y},
-        "options": {"colorMode": "value", "graphMode": "none", "reduceOptions": {"calcs": ["lastNotNull"]}},
-        "fieldConfig": {"defaults": {"thresholds": {"mode": "absolute", "steps": [{"color": "green", "value": None}]}}, "overrides": []},
+        "options": {"colorMode": "background", "graphMode": "none", "reduceOptions": {"calcs": ["lastNotNull"]}},
+        "fieldConfig": {"defaults": {"color": {"fixedColor": color, "mode": "fixed"}, "thresholds": {"mode": "absolute", "steps": [{"color": color, "value": None}]}}, "overrides": []},
         "targets": [
             {
                 "datasource": {"type": "prometheus", "uid": ds_uid},
@@ -53,7 +54,15 @@ def _timeseries_panel(
     ds_uid: str,
     unit: str = "",
 ) -> dict:
-    field_defaults = {}
+    field_defaults = {
+        "custom": {
+            "spanNulls": True,
+            "lineWidth": 1,
+            "fillOpacity": 0,
+            "pointSize": 5,
+            "showPoints": "always",
+        }
+    }
     if unit:
         field_defaults["unit"] = unit
     return {
@@ -149,23 +158,23 @@ def build_dashboard(ds_uid: str) -> dict:
     panels = []
 
     # ---- Row 1: stat panels y=0 (4 panels, w=6 each) ----
-    panels.append(_stat_panel(1, "Unique Triagers", f"otel_health_triagers_deduped{j}", 0, 0, 6, ds_uid))
-    panels.append(_stat_panel(2, "Unique Approvers", f"otel_health_approvers_deduped{j}", 6, 0, 6, ds_uid))
-    panels.append(_stat_panel(3, "Unique Maintainers", f"otel_health_maintainers_deduped{j}", 12, 0, 6, ds_uid))
-    panels.append(_stat_panel(14, "Unique Contributors with Status", f"otel_health_unique_users{j}", 18, 0, 6, ds_uid))
+    panels.append(_stat_panel(1, "Unique Triagers", f"otel_health_triagers_deduped{j}", 0, 0, 6, ds_uid, color="blue"))
+    panels.append(_stat_panel(2, "Unique Approvers", f"otel_health_approvers_deduped{j}", 6, 0, 6, ds_uid, color="green"))
+    panels.append(_stat_panel(3, "Unique Maintainers", f"otel_health_maintainers_deduped{j}", 12, 0, 6, ds_uid, color="orange"))
+    panels.append(_stat_panel(14, "Unique Contributors with Status", f"otel_health_unique_users{j}", 18, 0, 6, ds_uid, color="dark-purple"))
 
     # ---- Row 2: stat panels y=5 (5 panels, w=5/5/5/5/4) ----
-    panels.append(_stat_panel(4, "Total Repositories", f"otel_health_total_repos{j}", 0, 5, 5, ds_uid))
-    panels.append(_stat_panel(5, "Avg Triagers / Repo", f"otel_health_avg_triagers_per_repo{j}", 5, 5, 5, ds_uid))
-    panels.append(_stat_panel(6, "Avg Approvers / Repo", f"otel_health_avg_approvers_per_repo{j}", 10, 5, 5, ds_uid))
-    panels.append(_stat_panel(7, "Avg Maintainers / Repo", f"otel_health_avg_maintainers_per_repo{j}", 15, 5, 5, ds_uid))
+    panels.append(_stat_panel(4, "Total Repositories", f"otel_health_total_repos{j}", 0, 5, 5, ds_uid, color="purple"))
+    panels.append(_stat_panel(5, "Avg Triagers / Repo", f"otel_health_avg_triagers_per_repo{j}", 5, 5, 5, ds_uid, color="#5794F2"))
+    panels.append(_stat_panel(6, "Avg Approvers / Repo", f"otel_health_avg_approvers_per_repo{j}", 10, 5, 5, ds_uid, color="#73BF69"))
+    panels.append(_stat_panel(7, "Avg Maintainers / Repo", f"otel_health_avg_maintainers_per_repo{j}", 15, 5, 5, ds_uid, color="#FF9830"))
     panels.append(_stat_panel(12, "Avg Groups / User", f"otel_health_avg_groups_per_user{j}", 20, 5, 4, ds_uid))
 
     # ---- 30-Day Repository Activity table y=10 ----
     repo_activity_queries = [
         {"expr": f"otel_health_repo_issues_opened_30d{j}"},
-        {"expr": f"otel_health_repo_prs_opened_30d{j}"},
         {"expr": f"otel_health_repo_issues_closed_30d{j}"},
+        {"expr": f"otel_health_repo_prs_opened_30d{j}"},
         {"expr": f"otel_health_repo_prs_closed_30d{j}"},
         {"expr": f"otel_health_repo_issues_per_triager{j}"},
         {"expr": f"otel_health_repo_prs_per_approver{j}"},
@@ -180,8 +189,8 @@ def build_dashboard(ds_uid: str) -> dict:
             ],
         },
         {"matcher": {"id": "byName", "options": "Value #A"}, "properties": [{"id": "displayName", "value": "Issues Opened"}]},
-        {"matcher": {"id": "byName", "options": "Value #B"}, "properties": [{"id": "displayName", "value": "PRs Opened"}]},
-        {"matcher": {"id": "byName", "options": "Value #C"}, "properties": [{"id": "displayName", "value": "Issues Closed"}]},
+        {"matcher": {"id": "byName", "options": "Value #B"}, "properties": [{"id": "displayName", "value": "Issues Closed"}]},
+        {"matcher": {"id": "byName", "options": "Value #C"}, "properties": [{"id": "displayName", "value": "PRs Opened"}]},
         {"matcher": {"id": "byName", "options": "Value #D"}, "properties": [{"id": "displayName", "value": "PRs Closed"}]},
         {"matcher": {"id": "byName", "options": "Value #E"}, "properties": [{"id": "displayName", "value": "Issues / Triager"}]},
         {"matcher": {"id": "byName", "options": "Value #F"}, "properties": [{"id": "displayName", "value": "PRs / Approver"}]},

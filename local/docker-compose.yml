@@ -19,7 +19,7 @@ services:
 
   grafana:
     image: grafana/grafana:latest
-    container_name: otel-health-grafana
+    container_name: otel-health-grafana-dashboard
     ports:
       - "3000:3000"
     environment:
