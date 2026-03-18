@@ -12,7 +12,7 @@ import requests
 logger = logging.getLogger(__name__)
 
 DASHBOARD_UID = "otel-health-cloud"
-DASHBOARD_TITLE = "OTel Community Health (Cloud)"
+DASHBOARD_TITLE = "OTel Community Health"
 
 
 # ---------------------------------------------------------------------------
