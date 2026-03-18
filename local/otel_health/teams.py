@@ -197,7 +197,7 @@ def fetch_teams_data(client: GitHubClient, org: str) -> dict:
         repos_raw = client.get_all_pages(
             f"{GITHUB_API}/orgs/{org}/teams/{slug}/repos"
         )
-        repos = sorted(r["name"] for r in (repos_raw or []))
+        repos = sorted(r["name"] for r in (repos_raw or []) if not r.get("private"))
 
         teams.append(
             {
