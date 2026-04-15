@@ -150,6 +150,7 @@ def compute_repo_activity_30d(
     """
     by_repo = json.loads(by_repo_path.read_text())
     since_dt = datetime.now(timezone.utc) - timedelta(days=DAYS)
+    since_dt = since_dt.replace(hour=0, minute=0, second=0, microsecond=0)
 
     logger.info(
         f"Fetching {DAYS}-day issue/PR counts for {len(by_repo)} repos "

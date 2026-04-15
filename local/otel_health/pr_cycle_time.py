@@ -102,6 +102,7 @@ def compute_pr_cycle_time(
     repo_list = select_repos(teams_data, top_repos)
 
     since_dt = datetime.now(timezone.utc) - timedelta(weeks=weeks)
+    since_dt = since_dt.replace(hour=0, minute=0, second=0, microsecond=0)
     since_str = since_dt.strftime("%Y-%m-%dT%H:%M:%SZ")
 
     logger.info(

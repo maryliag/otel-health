@@ -100,7 +100,7 @@ def main() -> None:
     output_dir = cloud_dir / "output"
     output_dir.mkdir(parents=True, exist_ok=True)
 
-    cache = Cache(cloud_dir / "cache")
+    cache = Cache(cloud_dir / "cache", max_age_seconds=6 * 3600)  # 6h TTL
     client = GitHubClient(github_token, cache)
 
     # -- Step 1: Fetch teams --

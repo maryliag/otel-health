@@ -64,9 +64,10 @@ class RateLimiter:
 
 
 class Cache:
-    def __init__(self, cache_dir: Path):
+    def __init__(self, cache_dir: Path, max_age_seconds: int = 0):
         self.cache_dir = cache_dir
         self.cache_dir.mkdir(parents=True, exist_ok=True)
+        self.max_age_seconds = max_age_seconds  # 0 = no expiry
         self.hits = 0
         self.misses = 0
 
@@ -77,6 +78,11 @@ class Cache:
     def get(self, key: str):
         p = self._path(key)
         if p.exists():
+            if self.max_age_seconds > 0:
+                age = time.time() - p.stat().st_mtime
+                if age > self.max_age_seconds:
+                    self.misses += 1
+                    return None
             self.hits += 1
             return json.loads(p.read_text())
         self.misses += 1

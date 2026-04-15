@@ -138,6 +138,8 @@ def compute_activity(
     repo_list = select_repos(teams_data, top_repos)
 
     since_dt = datetime.now(timezone.utc) - timedelta(weeks=weeks)
+    # Truncate to midnight UTC so cache keys are stable within a single day
+    since_dt = since_dt.replace(hour=0, minute=0, second=0, microsecond=0)
     since = since_dt.strftime("%Y-%m-%dT%H:%M:%SZ")
     all_weeks = build_week_list(since_dt)
 
