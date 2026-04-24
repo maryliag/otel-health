@@ -76,7 +76,9 @@ def _timeseries_panel(
         "targets": [
             {
                 "datasource": {"type": "prometheus", "uid": ds_uid},
-                "expr": expr,
+                # last_over_time([25h]) fills the Prometheus 5-min staleness gap
+                # between daily pushes so every range-query step returns a value.
+                "expr": f"last_over_time({expr}[25h])",
                 "legendFormat": "{{repo}}",
                 "refId": "A",
             }
@@ -256,10 +258,10 @@ def build_dashboard(ds_uid: str) -> dict:
             ],
         },
         "targets": [
-            {"datasource": {"type": "prometheus", "uid": ds_uid}, "expr": f"otel_health_triagers_deduped{j}", "legendFormat": "Triagers", "refId": "A"},
-            {"datasource": {"type": "prometheus", "uid": ds_uid}, "expr": f"otel_health_approvers_deduped{j}", "legendFormat": "Approvers", "refId": "B"},
-            {"datasource": {"type": "prometheus", "uid": ds_uid}, "expr": f"otel_health_maintainers_deduped{j}", "legendFormat": "Maintainers", "refId": "C"},
-            {"datasource": {"type": "prometheus", "uid": ds_uid}, "expr": f"otel_health_unique_users{j}", "legendFormat": "Total with Status", "refId": "D"},
+            {"datasource": {"type": "prometheus", "uid": ds_uid}, "expr": f"last_over_time(otel_health_triagers_deduped{j}[25h])", "legendFormat": "Triagers", "refId": "A"},
+            {"datasource": {"type": "prometheus", "uid": ds_uid}, "expr": f"last_over_time(otel_health_approvers_deduped{j}[25h])", "legendFormat": "Approvers", "refId": "B"},
+            {"datasource": {"type": "prometheus", "uid": ds_uid}, "expr": f"last_over_time(otel_health_maintainers_deduped{j}[25h])", "legendFormat": "Maintainers", "refId": "C"},
+            {"datasource": {"type": "prometheus", "uid": ds_uid}, "expr": f"last_over_time(otel_health_unique_users{j}[25h])", "legendFormat": "Total with Status", "refId": "D"},
         ],
     })
 
