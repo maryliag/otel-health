@@ -326,6 +326,8 @@ def provision_dashboard(grafana_url: str, api_key: str, ds_uid: str) -> str:
         json=payload,
         timeout=30,
     )
+    if not resp.ok:
+        logger.error(f"API response ({resp.status_code}): {resp.text[:500]}")
     resp.raise_for_status()
     result = resp.json()
     url = f"{grafana_url}{result.get('url', '')}"
